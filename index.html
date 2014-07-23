@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<style>
+
+html {
+    font: 14px "Source Code Pro", monospace;
+    word-wrap: break-word;
+}
+
+
+.json .object,
+.json .array {
+    margin-left: 2em;
+    position: relative;
+}
+.json .object::before,
+.json .object::after,
+.json .array::before,
+.json .array::after {
+    display: block;
+    margin-left: -2em;
+}
+
+.json .object::after,
+.json .array::after {
+    float: left;
+}
+
+.json .field:not(:last-child)::after {
+    content: ',';
+}
+    
+.json .object::before { content: '{'; }
+.json .object::after { content: '}'; }
+
+.json .array::before { content: '['; }
+
+.json .array::after { content: ']'; }
+
+.json .key { float: left; }
+.json .separator { float: left; }
+
+.json .key::after {
+    content: ':';
+    display: inline-block;
+}
+
+.json .string::before,
+.json .string::after {
+    content: '"';
+}
+
+.json .string { color: green; }
+.json .number { color: red; }
+.json .boolean { color: blue; }
+.json .null { color: gray; }
+
+.json .collapse {
+    cursor: pointer;
+}
+
+.json .collapse::before {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 0.7em;
+    height: 0.7em;
+    top: 0.2em;
+    left: -3.4em;
+    background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEwMCAxMDAiPgoJPHBvbHlnb24gcG9pbnRzPSIwLDAgNTAsMTAwIDEwMCwwIiBmaWxsPSJyZ2JhKDAsIDAsIDAsIDAuMikiIC8+Cjwvc3ZnPgo=);
+}
+
+.json .collapsed .collapse::before {
+    background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEwMCAxMDAiPgoJPHBvbHlnb24gcG9pbnRzPSIwLDAgMTAwLDUwIDAsMTAwIiBmaWxsPSJyZ2JhKDAsIDAsIDAsIDAuMikiIC8+Cjwvc3ZnPgo=);
+}
+
+.json .collapsed .collapse::after {
+    content: '\2026';
+    float: left;
+    display: inline-block;
+    padding: 0 0.25em;
+}
+
+.json .collapsed > .field {
+    display: none;
+}
+
+.json .collapsed::before,
+.json .collapsed::after {
+    float: left;
+    margin: 0;
+}
+
+</style>
+<body>
+<button type=button id=load>Load</button>
+<div class=json id=out></div>
+<script>
+
+function handleCollapse(e) {
+    e.target.parentNode.classList.toggle('collapsed');
+}
+
+function makeCollapseEl() {
+    var el = document.createElement('div');
+    el.className = 'collapse';
+    el.addEventListener('click', handleCollapse);
+    return el;
+}
+
+function formatJSON(json) {
+    var el, key;
+    if (json === null) {
+        el = document.createElement('span');
+        el.className = 'null';
+        el.appendChild(document.createTextNode('null'));
+    } else if (typeof json === 'string') {
+        el = document.createElement('span');
+        el.className = 'string';
+        el.appendChild(document.createTextNode(json));
+    } else if (typeof json === 'number') {
+        el = document.createElement('span');
+        el.className = 'number';
+        el.appendChild(document.createTextNode(json));
+    } else if (typeof json === 'boolean') {
+        el = document.createElement('span');
+        el.className = 'boolean';
+        el.appendChild(document.createTextNode(json ? 'true' : 'false'));
+    } else if (json instanceof Array) {
+        el = document.createElement('div');
+        el.className = 'array';
+        el.appendChild(makeCollapseEl());
+        json.forEach(function(item) {
+            var fieldEl = document.createElement('div');
+            fieldEl.className = 'field';
+            fieldEl.appendChild(formatJSON(item));
+            el.appendChild(fieldEl);
+        });
+    } else {
+        el = document.createElement('div');
+        el.className = 'object';
+        el.appendChild(makeCollapseEl());
+        for (key in json) {
+            var fieldEl = document.createElement('div');
+            var keyEl = document.createElement('div');
+            var sepEl = document.createElement('span');
+            fieldEl.className = 'field';
+            keyEl.className = 'key';
+            sepEl.className = 'separator';
+            keyEl.appendChild(formatJSON(key));
+            sepEl.appendChild(document.createTextNode('\u00a0'));
+            fieldEl.appendChild(keyEl);
+            fieldEl.appendChild(sepEl);
+            fieldEl.appendChild(formatJSON(json[key]));
+            el.appendChild(fieldEl);
+        }
+    }
+    return el;
+}
+
+load.addEventListener('click', function() {
+    out.innerHTML = '';
+    out.appendChild(formatJSON(JSON.parse(prompt('Gimme some JSON'))));
+});
+
+</script>
